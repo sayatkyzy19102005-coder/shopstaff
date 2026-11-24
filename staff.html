@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Стиль &amp; Образ — Внутренний портал персонала (ERP, Кадры, Склад и Supabase Storage)</title>
+  <meta name="description" content="Внутренний портал персонала магазина одежды Стиль & Образ: Сотрудники и Кадры, Добавление товаров в Supabase Storage, Склад, Продажи и Выручка." />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #ffffff;
+      color: #111827;
+    }
+    .brand-serif {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ИИ Аналитик Персонала */
+    .ai-fab {
+      position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 45;
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .8rem 1.2rem; border-radius: 999px;
+      background: linear-gradient(135deg, #0f172a, #1d68b8); color: #fff;
+      font-weight: 700; font-size: .83rem; cursor: pointer;
+      box-shadow: 0 14px 32px -8px rgba(29, 104, 184, .55);
+      border: 1px solid rgba(255,255,255,.2);
+      transition: transform .15s;
+    }
+    .ai-fab:hover { transform: translateY(-2px); }
+    .ai-panel {
+      position: fixed; right: 1.25rem; bottom: 4.8rem; z-index: 45;
+      width: min(410px, calc(100vw - 2rem)); height: min(540px, calc(100vh - 7rem));
+      display: flex; flex-direction: column; border-radius: 1.25rem; overflow: hidden;
+      background: #ffffff; border: 1px solid #cbd5e1;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, .4);
+    }
+    .ai-panel.hidden { display: none; }
+    .ai-msg {
+      max-width: 88%; padding: .7rem .9rem; border-radius: .9rem;
+      font-size: .82rem; line-height: 1.45; word-wrap: break-word;
+    }
+    .ai-msg-user {
+      align-self: flex-end; color: #fff;
+      background: #1d68b8; border-bottom-right-radius: .25rem;
+    }
+    .ai-msg-bot {
+      align-self: flex-start; color: #0f172a;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+      border-bottom-left-radius: .25rem;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-[#1d68b8] selection:text-white">
+  <div id="app"></div>
+
+  <!-- ИИ-АНАЛИТИК ПЕРСОНАЛА «СТИЛЬ AI • ERP» -->
+  <button id="aiFab" class="ai-fab" type="button" aria-label="Открыть Стиль AI ERP">
+    <svg class="w-4 h-4 text-sky-300" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2L14.4 8.6L21 11L14.4 13.4L12 20L9.6 13.4L3 11L9.6 8.6L12 2Z"/>
+    </svg>
+    <span>Стиль AI • ERP Аналитик</span>
+  </button>
+
+  <section id="aiPanel" class="ai-panel hidden" aria-label="Стиль AI ERP Чат">
+    <div class="flex items-center justify-between px-4 py-3 bg-slate-900 text-white">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#1d68b8] grid place-items-center font-bold text-xs text-white">ERP</div>
+        <div>
+          <div class="font-bold text-sm leading-tight">Стиль AI • Аналитик магазина</div>
+          <div class="text-[11px] text-slate-300">Кадры, выполнение плана, склад и Supabase Storage</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="aiClear" type="button" class="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-[11px]">Очистить</button>
+        <button id="aiClose" type="button" class="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-xs font-bold">✕</button>
+      </div>
+    </div>
+
+    <div id="aiMessages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+      <div class="ai-msg ai-msg-bot">
+        Здравствуйте, <b>Мария К.</b>! Я <b>Стиль AI • ERP</b> — аналитический ассистент портала персонала <b>«Стиль &amp; Образ»</b>.<br><br>
+        Анализирую выполнение плана продаж по сотрудникам, остатки осенней коллекции на складе и загрузку фотографий товаров в <b>Supabase Storage</b>.
+      </div>
+    </div>
+
+    <div class="px-3 py-2 border-t border-slate-100 flex gap-1.5 overflow-x-auto no-scrollbar bg-slate-50">
+      <button type="button" class="ai-quick px-2.5 py-1 rounded-full bg-white border border-slate-300 text-[11px] font-medium hover:border-[#1d68b8] shrink-0" data-prompt="Дай полную сводку по продажам сотрудников и выполнению дневного плана.">📊 Выполнение плана</button>
+      <button type="button" class="ai-quick px-2.5 py-1 rounded-full bg-white border border-slate-300 text-[11px] font-medium hover:border-[#1d68b8] shrink-0" data-prompt="Проверь остатки товаров на складе и статус Supabase Storage.">📦 Склад и Storage</button>
+    </div>
+
+    <form id="aiForm" class="p-3 border-t border-slate-200 flex items-center gap-2 bg-white">
+      <input id="aiInput" type="text" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-[#1d68b8]" placeholder="Спросите про выручку, КПЭ сотрудников, остатки склада..." autocomplete="off" required />
+      <button id="aiSendBtn" type="submit" class="px-3.5 py-2 rounded-lg bg-[#1d68b8] hover:bg-blue-700 text-white text-xs font-semibold shrink-0">Отправить</button>
+    </form>
+  </section>
+
+  <script src="images.js"></script>
+  <script>
+    // ============================================================================
+    // 🔑 БЛОК ДЛЯ ВСТАВКИ КЛЮЧЕЙ ВАШЕГО НОВОГО ПРОЕКТА SUPABASE (ПОРТАЛ ПЕРСОНАЛА)
+    // Вы можете вставить свои ключи прямо сюда ИЛИ в файл shared-data.js:
+    // ============================================================================
+    window.SUPABASE_KEYS_OVERRIDE = {
+      url:    "https://zpmapedzbbrfxlmuncbd.supabase.co",
+      key:    "sb_publishable_Q8bp5yDcT3g-b0K7tnvbfw_RYFYDkMi",
+      bucket: "product-images", // Бакет в Supabase Storage для сохранения фото одежды
+      aiFn:   "style-ai"
+    };
+  </script>
+  <script src="shared-data.js"></script>
+  <script>
+    const IMAGES = window.STYLE_IMAGES || {};
+    const CATEGORIES = window.STYLE_CATEGORIES;
+    const SIZES = window.STYLE_SIZES;
+    const COLORS = window.STYLE_COLORS;
+    const BRANDS = window.STYLE_BRANDS;
+    const STATUS_META = window.STYLE_ORDER_STATUS_META;
+    const fmt = window.fmtKZT;
+
+    const initialCfg = window.loadStyleConfig();
+    const initialDb = window.loadSharedDb();
+
+    // Поддержка URL-параметра ?modal=add_product для мгновенного открытия окна «Добавление нового товара»
+    const urlParams = new URLSearchParams(window.location.search);
+    const startModalAdd = urlParams.get("modal") === "add_product";
+    const startNav = urlParams.get("nav") || "staff"; // По умолчанию открыт экран «Сотрудники и Кадры» из image_4.png
+
+    const state = {
+      activeNav: startNav, // 'dashboard' | 'schedule' | 'staff' | 'sales' | 'tasks' | 'time' | 'docs' | 'settings'
+      shiftOpen: true,
+      globalSearch: "",
+
+      // Фильтры раздела «Сотрудники и Кадры» (image_4.png)
+      deptFilter: "all", // 'all' | 'Торговый зал' | 'Касса' | 'Склад'
+      staffSearch: "",
+      addStaffModalOpen: false,
+      editStaffMember: null,
+      chatStaffMember: null,
+      chatMessageInput: "",
+
+      // План продаж на сегодня (image_4.png: 1 450 000 ₸ / 2 500 000 ₸)
+      dailySalesDone: 1450000,
+      dailySalesTarget: 2500000,
+      newTaskTitle: "",
+      newTaskAssignee: "Петрова А.",
+
+      // Модальное окно «Добавление нового товара» (100% по макету image_5.png)
+      addProductModalOpen: startModalAdd,
+      npName: 'Куртка зимняя парка "Nordic"',
+      npSku: "WO-4509",
+      npCategoryPath: "Мужчинам > Верхняя одежда > Парки",
+      npCategorySlug: "men",
+      npBrand: "Nordic Shield",
+      npDesc: "Утепленная зимняя парка с водоотталкивающим покрытием. Капюшон с искусственным мехом, множество карманов...",
+      npSizes: ["S", "M", "L", "XL", "XXL"],
+      npColors: [
+        { name: "Графитовый", hex: "#2d2f31", selected: true },
+        { name: "Синий", hex: "#1d68b8", selected: false },
+        { name: "Зеленый", hex: "#2e7d32", selected: false },
+        { name: "Бордовый", hex: "#b91c1c", selected: false }
+      ],
+      npPurchasePrice: 18000,
+      npRetailPrice: 55000,
+      npDiscountPercent: 0,
+      npStockQty: 45,
+      npMinStock: 5,
+      npWarehouse: "Основной склад",
+      npPublishNow: true,
+      npMainFile: null,
+      npMainPreview: "",
+      npGalleryPreviews: [IMAGES.parka_sketch || "", "", "", ""],
+      npUploading: false,
+      npSizeTableOpen: false,
+
+      // Авторизованный сотрудник портала и окно входа
+      staffAuthModalOpen: urlParams.get("auth") === "login",
+      staffAuthTab: "login", // 'login' | 'register'
+      currentStaffUser: {
+        name: "Мария К.",
+        position: "Директор магазина",
+        email: "director@style-obraz.kz",
+        avatar: IMAGES.women_coat || "assets/images/women_coat.jpg"
+      },
+      staffTableShowAll: false,
+      catalogPage: 1,
+
+      // Настройки Supabase & Storage
+      sbUrl: initialCfg.url,
+      sbKey: initialCfg.key,
+      sbBucket: initialCfg.bucket || "product-images",
+      aiFn: initialCfg.aiFn || "style-ai",
+      sbConnected: false,
+      sbSyncing: false,
+      sbStatusMsg: "",
+      lastStorageUrl: "",
+
+      // Коллекции данных
+      products: initialDb.products,
+      staff: initialDb.staff,
+      tasks: initialDb.tasks,
+      orders: initialDb.orders,
+      toast: ""
+    };
+
+    let sbClient = null;
+    let sbChannel = null;
+    let aiHistory = [];
+
+    function getSbClient() {
+      const cleanUrl = window.cleanSupabaseUrl(state.sbUrl);
+      if (!cleanUrl || !state.sbKey || !window.supabase) return null;
+      if (sbClient) return sbClient;
+      try {
+        sbClient = window.supabase.createClient(cleanUrl, state.sbKey);
+        return sbClient;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function persistLocal() {
+      window.saveSharedDb({
+        products: state.products,
+        staff: state.staff,
+        tasks: state.tasks,
+        orders: state.orders
+      });
+    }
+
+    window.addEventListener("storage", (e) => {
+      if (e.key === "style_obraz_shared_db_v4") {
+        const fresh = window.loadSharedDb();
+        state.products = fresh.products;
+        state.staff = fresh.staff;
+        state.tasks = fresh.tasks;
+        state.orders = fresh.orders;
+        render();
+      }
+    });
+
+    async function syncFromSupabase() {
+      const sb = getSbClient();
+      if (!sb) {
+        state.sbConnected = false;
+        return;
+      }
+      try {
+        const [prodRes, staffRes, taskRes, ordRes] = await Promise.all([
+          sb.from("products").select("*").order("popularity", { ascending: false }),
+          sb.from("staff_members").select("*").order("created_at", { ascending: true }),
+          sb.from("staff_tasks").select("*").order("created_at", { ascending: true }),
+          sb.from("orders").select("*").order("created_at", { ascending: false }).limit(100)
+        ]);
+
+        if (!prodRes.error) state.sbConnected = true;
+
+        const clothingSlugs = new Set(["new", "women", "men", "kids", "brands", "sale", "sport", "shoes"]);
+        if (Array.isArray(prodRes.data) && prodRes.data.length > 0) {
+          const validProds = prodRes.data.filter((p) => p.sku || clothingSlugs.has(p.category_slug));
+          if (validProds.length > 0) {
+            const cloudProds = validProds.map((p, idx) => ({
+              id: String(p.id),
+              sku: p.sku || `WO-${4500 + idx}`,
+              category_slug: p.category_slug || "men",
+              subcategory: p.subcategory || "Верхняя одежда",
+              brand: p.brand || "Nordic Shield",
+              name: p.name,
+              description: p.description || "",
+              purchase_price: Number(p.purchase_price || 18000),
+              base_price: Number(p.base_price || 55000),
+              old_price: p.old_price ? Number(p.old_price) : null,
+              discount_percent: Number(p.discount_percent || 0),
+              badge: p.badge || "",
+              sizes: Array.isArray(p.sizes) ? p.sizes : ["S", "M", "L", "XL"],
+              colors: Array.isArray(p.colors) ? p.colors : [{ name: "Черный", hex: "#0d0f12" }],
+              season: p.season || "Осень-Зима '26",
+              image: p.image_url || p.image || IMAGES.men_parka,
+              stock_qty: Number(p.stock_qty ?? 45),
+              min_stock: Number(p.min_stock ?? 5),
+              warehouse: p.warehouse || "Основной склад",
+              is_available: p.is_available !== false,
+              is_published: p.is_published !== false,
+              is_new: Boolean(p.is_new),
+              is_sale: Boolean(p.is_sale)
+            }));
+            const cloudIds = new Set(cloudProds.map((x) => x.id));
+            state.products = [
+              ...cloudProds,
+              ...state.products.filter((loc) => !cloudIds.has(loc.id))
+            ];
+          }
+        }
+
+        if (Array.isArray(staffRes.data) && staffRes.data.length > 0) {
+          state.staff = staffRes.data.map((m, i) => ({
+            id: String(m.id),
+            name: m.full_name,
+            shortName: m.full_name.split(" ")[0] + " " + (m.full_name.split(" ")[1]?.[0] || "") + ".",
+            position: m.position || "Продавец-консультант",
+            department: m.department || "Торговый зал",
+            status: m.status || "on_shift",
+            hours: Number(m.hours_worked ?? 120),
+            salesKzt: Number(m.monthly_sales ?? 0),
+            salesRub: Number(m.monthly_sales_rub ?? 0),
+            planTarget: Number(m.plan_target ?? 3500000),
+            planPercent: Number(m.plan_percent ?? 85),
+            hourlyRate: Number(m.hourly_rate ?? 2100),
+            phone: m.phone || "+7 (701) 234-56-01",
+            email: m.email || "staff@style-obraz.kz",
+            avatar: window.STYLE_SEED_STAFF[i % window.STYLE_SEED_STAFF.length].avatar
+          }));
+        }
+
+        if (Array.isArray(taskRes.data) && taskRes.data.length > 0) {
+          state.tasks = taskRes.data.map((t) => ({
+            id: String(t.id),
+            title: t.title,
+            statusNote: t.status_note || "В процессе",
+            assignee: t.assignee || "",
+            done: Boolean(t.is_done)
+          }));
+        }
+
+        if (Array.isArray(ordRes.data) && ordRes.data.length > 0) {
+          state.orders = ordRes.data.map((o) => ({
+            id: String(o.id),
+            number: Number(o.order_number || 8401),
+            customer: o.customer_name || "Покупатель",
+            phone: o.customer_phone || "",
+            city: o.city || "Алматы",
+            address: o.address || "",
+            paymentMethod: o.payment_method || "kaspi",
+            status: o.status || "new",
+            total: Number(o.total_amount || 0),
+            sellerName: o.seller_name || "Сидоров Алексей",
+            createdAt: o.created_at ? new Date(o.created_at).getTime() : Date.now(),
+            items: Array.isArray(o.items) ? o.items : []
+          }));
+        }
+
+        persistLocal();
+        render();
+
+        if (!sbChannel) {
+          sbChannel = sb
+            .channel("style-obraz-staff-live")
+            .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => syncFromSupabase())
+            .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => syncFromSupabase())
+            .on("postgres_changes", { event: "*", schema: "public", table: "staff_members" }, () => syncFromSupabase())
+            .on("postgres_changes", { event: "*", schema: "public", table: "staff_tasks" }, () => syncFromSupabase())
+            .subscribe();
+        }
+      } catch (err) {
+        console.warn("Supabase staff sync fallback:", err);
+      }
+    }
+
+    function notify(msg) {
+      state.toast = msg;
+      render();
+      setTimeout(() => {
+        if (state.toast === msg) {
+          state.toast = "";
+          render();
+        }
+      }, 3500);
+    }
+
+    // Скачивание табеля сотрудников и отчёта продаж в Excel (.xls)
+    function downloadTimesheetExcel() {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8"></head>
+        <body>
+          <h2>СТИЛЬ &amp; ОБРАЗ — Табель учёта рабочего времени и выполнения плана продаж (Ноябрь 2026)</h2>
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr style="background:#1d68b8;color:#ffffff;font-weight:bold;">
+              <th>ФИО Сотрудника</th>
+              <th>Должность</th>
+              <th>Отдел</th>
+              <th>Статус</th>
+              <th>Отработано часов (Ноябрь)</th>
+              <th>Продажи за месяц (₸)</th>
+              <th>Выполнение плана (%)</th>
+            </tr>
+            ${state.staff.map((m) => `
+              <tr>
+                <td>${escapeHtml(m.name)}</td>
+                <td>${escapeHtml(m.position)}</td>
+                <td>${escapeHtml(m.department)}</td>
+                <td>${m.status === "on_shift" ? "На смене" : m.status === "day_off" ? "Выходной" : "В отпуске"}</td>
+                <td>${m.hours} ч</td>
+                <td>${m.salesKzt ? m.salesKzt.toLocaleString("ru-RU") + " ₸" : "—"}</td>
+                <td>${m.planPercent ? m.planPercent + "%" : "—"}</td>
+              </tr>
+            `).join("")}
+          </table>
+        </body></html>
+      `;
+      const blob = new Blob(["\uFEFF", html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Style_Obraz_Tabel_Staff_${dateStr}.xls`;
+      a.click();
+      notify("Табель сотрудников (Excel .xls) успешно сформирован и скачан!");
+    }
+
+    // ==================== ВЕРХНЯЯ ПАНЕЛЬ И ШАПКА ПОРТАЛА (точно по image_4.png) ====================
+    function renderTopHeader() {
+      return `
+        <!-- Сервисная строка -->
+        <div class="bg-[#f2f3f5] border-b border-slate-200/80 text-[12px] text-slate-700">
+          <div class="max-w-[1360px] mx-auto px-4 sm:px-6 h-8 flex items-center justify-between">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <a href="https://mrzeetses.github.io/shop-client/" target="_blank" class="inline-flex items-center gap-1.5 font-semibold text-slate-900 hover:text-[#1d68b8] transition">
+                <span>🛍</span>
+                <span>Клиентский магазин (shop-client)</span>
+              </a>
+              <button id="top-open-add-prod-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-[#1d68b8] hover:bg-blue-700 text-white text-[11px] font-semibold transition">
+                <span>+ Добавить новый товар (Storage)</span>
+              </button>
+              <button id="top-open-staff-auth-btn" type="button" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-semibold transition">
+                <span>🔐 Окно входа сотрудника</span>
+              </button>
+              <button id="top-open-sb-settings-btn" type="button" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-white border border-slate-300 hover:border-slate-900 text-[11px] font-medium transition">
+                <span class="w-2 h-2 rounded-full ${state.sbConnected ? "bg-emerald-500" : state.sbUrl ? "bg-amber-500" : "bg-slate-400"}"></span>
+                <span>🔑 ${state.sbConnected ? "Supabase + Storage активны" : "Ключи Supabase"}</span>
+              </button>
+            </div>
+            <div class="flex items-center gap-6">
+              <button id="toggle-shift-top-btn" type="button" class="hover:text-slate-950">
+                Смена: <span class="font-medium ${state.shiftOpen ? "text-emerald-700" : "text-rose-600"}">${state.shiftOpen ? "Открыта" : "Закрыта"}</span>
+              </button>
+              <button type="button" class="nav-side-btn hover:text-slate-950" data-nav="schedule">Расписание</button>
+              <button type="button" class="nav-side-btn hover:text-slate-950" data-nav="settings">Поддержка</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Главная шапка Внутреннего портала персонала (image_4.png) -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+          <div class="max-w-[1360px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+            <!-- Логотип Стиль & Образ / Внутренний портал персонала -->
+            <button type="button" class="nav-side-btn flex items-center gap-3 text-left" data-nav="staff">
+              <div class="flex flex-col">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-9 h-7 text-slate-900 shrink-0" viewBox="0 0 44 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 8.5C22 6.5 23.6 5 25.5 5C27.4 5 29 6.5 29 8.5C29 10.2 27.8 11.4 26.2 12L22 13.5"/>
+                    <path d="M22 13.5L4 22.5C2.7 23.1 3.1 25 4.6 25H39.4C40.9 25 41.3 23.1 40 22.5L22 13.5Z"/>
+                  </svg>
+                  <span class="brand-serif text-2xl sm:text-[26px] font-semibold tracking-tight text-slate-900">Стиль &amp; Образ</span>
+                </div>
+                <span class="text-[11px] text-slate-600 tracking-wide -mt-0.5">Внутренний портал персонала</span>
+              </div>
+            </button>
+
+            <!-- Поиск по порталу персонала -->
+            <div class="flex-1 max-w-[440px] mx-2">
+              <div class="relative">
+                <input
+                  id="staff-global-search"
+                  type="text"
+                  value="${escapeAttr(state.staffSearch)}"
+                  placeholder="Искать сотрудников, задачи, документы..."
+                  class="w-full h-10 pl-4 pr-10 rounded-full bg-[#f8f9fa] border border-slate-300 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#1d68b8]"
+                />
+                <svg class="w-4 h-4 text-slate-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <line x1="20" y1="20" x2="16.2" y2="16.2"></line>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Профиль Директора магазина (Мария К.) + Уведомления (5) + Сообщения (3) -->
+            <div class="flex items-center gap-5">
+              <div class="hidden sm:flex flex-col text-xs leading-tight">
+                <span class="text-slate-600">Смена:</span>
+                <span class="font-semibold ${state.shiftOpen ? "text-[#15803d]" : "text-rose-600"}">${state.shiftOpen ? "Открыта" : "Закрыта"}</span>
+              </div>
+
+              <button id="header-profile-auth-btn" type="button" title="Открыть окно входа и смены сотрудника" class="flex items-center gap-2.5 text-left hover:opacity-85 transition">
+                <img
+                  src="${escapeAttr(state.currentStaffUser.avatar)}"
+                  alt="${escapeAttr(state.currentStaffUser.name)}"
+                  class="w-10 h-10 rounded-full object-cover object-top border border-slate-300"
+                />
+                <div class="text-xs leading-snug">
+                  <div class="font-semibold text-slate-900">${escapeHtml(state.currentStaffUser.position)}</div>
+                  <div class="text-slate-600">(${escapeHtml(state.currentStaffUser.name)})</div>
+                </div>
+              </button>
+
+              <button type="button" id="notif-bell-btn" class="relative flex flex-col items-center text-slate-800 hover:text-[#1d68b8]">
+                <div class="relative">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  <span class="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-[#1d68b8] text-white text-[10px] font-bold grid place-items-center">5</span>
+                </div>
+                <span class="text-[10.5px] text-slate-600 mt-0.5">Уведомления</span>
+              </button>
+
+              <button type="button" id="messages-top-btn" class="relative flex flex-col items-center text-slate-800 hover:text-[#1d68b8]">
+                <div class="relative">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                  <span class="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-[#1d68b8] text-white text-[10px] font-bold grid place-items-center">3</span>
+                </div>
+                <span class="text-[10.5px] text-slate-600 mt-0.5">Сообщения</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Горизонтальная полоса разделов каталога (точно как на image_4.png и image_5.png) -->
+          <nav class="border-t border-slate-200 bg-white">
+            <div class="max-w-[1360px] mx-auto px-4 sm:px-6 flex items-center justify-between overflow-x-auto no-scrollbar">
+              ${CATEGORIES.map((cat) => `
+                <button
+                  type="button"
+                  class="staff-cat-link py-2.5 px-3 text-[13px] whitespace-nowrap text-slate-800 hover:text-[#1d68b8] transition"
+                  data-cat="${cat.slug}"
+                >
+                  ${escapeHtml(cat.name)}
+                </button>
+              `).join("")}
+            </div>
+          </nav>
+        </header>
+      `;
+    }
+
+    // ==================== ЛЕВОЕ БОКОВОЕ МЕНЮ ПОРТАЛА (image_4.png) ====================
+    function renderLeftSidebar() {
+      const items = [
+        { id: "dashboard", label: "Дашборд", icon: `<path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>` },
+        { id: "schedule",  label: "Расписание\nсмен", icon: `<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>` },
+        { id: "staff",     label: "Сотрудники\nи Кадры", icon: `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>` },
+        { id: "sales",     label: "Продажи и\nВыручка", icon: `<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>` },
+        { id: "tasks",     label: "Задачи и\nПланы", icon: `<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 12l2 2 4-4"/>` },
+        { id: "time",      label: "Учет рабочего\nвремени", icon: `<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>` },
+        { id: "docs",      label: "Документы", icon: `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>` },
+        { id: "settings",  label: "Настройки", icon: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>` }
+      ];
+
+      return `
+        <aside class="w-full lg:w-[195px] bg-[#f3f4f6] border-r border-slate-200 shrink-0 py-4">
+          <div class="space-y-1">
+            ${items.map((it) => {
+              const active = state.activeNav === it.id;
+              return `
+                <button
+                  type="button"
+                  class="nav-side-btn w-full flex items-center gap-3 px-4 py-3 text-left text-[13px] leading-tight transition border-l-4 ${
+                    active
+                      ? "border-[#1d68b8] bg-[#e5e7eb] font-semibold text-slate-950"
+                      : "border-transparent text-slate-800 hover:bg-slate-200/70"
+                  }"
+                  data-nav="${it.id}"
+                >
+                  <svg class="w-5 h-5 shrink-0 ${active ? "text-slate-950" : "text-slate-700"}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    ${it.icon}
+                  </svg>
+                  <span class="whitespace-pre-line">${escapeHtml(it.label)}</span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+
+          <div class="mt-6 px-3">
+            <button
+              id="sidebar-add-product-btn"
+              type="button"
+              class="w-full py-2.5 px-3 rounded-lg bg-[#1d68b8] hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition text-center"
+            >
+              + Новый товар (Storage)
+            </button>
+          </div>
+        </aside>
+      `;
+    }
+
+    // ==================== ПРАВАЯ КОЛОНКА ВИДЖЕТОВ (точно по image_4.png) ====================
+    function renderRightWidgets() {
+      const planPct = Math.min(100, Math.round((state.dailySalesDone / state.dailySalesTarget) * 100));
+      const shiftAvatars = [
+        { label: "Иванов Д.", img: IMAGES.men_coat },
+        { label: "Петрова А.", img: IMAGES.women_coat },
+        { label: "Петрова А.", img: IMAGES.women_bomber },
+        { label: "И. др.", img: IMAGES.men_leather },
+        { label: "Сидоров А.", img: IMAGES.men_parka },
+        { label: "И. д...", img: IMAGES.men_bomber }
+      ];
+
+      return `
+        <aside class="w-full xl:w-[295px] shrink-0 space-y-4">
+          <!-- Виджет 1: Сегодня на смене (8 чел.) -->
+          <div class="bg-[#f3f4f6] rounded-xl p-4 border border-slate-200/80">
+            <h3 class="text-sm font-semibold text-slate-950 mb-3">Сегодня на смене (8 чел.)</h3>
+            <div class="grid grid-cols-2 gap-y-2.5 gap-x-2">
+              ${shiftAvatars.map((av) => `
+                <div class="flex items-center gap-2">
+                  <img src="${escapeAttr(av.img)}" alt="${escapeAttr(av.label)}" class="w-8 h-8 rounded-full object-cover object-top border border-slate-300 shrink-0" />
+                  <span class="text-xs text-slate-800 truncate">${escapeHtml(av.label)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+
+          <!-- Виджет 2: План продаж на сегодня -->
+          <div class="bg-[#f3f4f6] rounded-xl p-4 border border-slate-200/80">
+            <h3 class="text-sm font-semibold text-slate-950 mb-2">План продаж на сегодня</h3>
+            <div class="text-xs text-slate-800">
+              Выполнено: <span class="font-bold text-slate-950">${fmt(state.dailySalesDone)}</span> / ${fmt(state.dailySalesTarget)}
+            </div>
+            <div class="mt-2.5 w-full h-2.5 rounded-full bg-slate-300 overflow-hidden">
+              <div class="h-full rounded-full bg-[#1d68b8]" style="width: ${planPct}%;"></div>
+            </div>
+          </div>
+
+          <!-- Виджет 3: Задачи на день -->
+          <div class="bg-[#f3f4f6] rounded-xl p-4 border border-slate-200/80">
+            <h3 class="text-sm font-semibold text-slate-950 mb-3">Задачи на день</h3>
+            <div class="space-y-3">
+              ${state.tasks.map((t) => `
+                <label class="flex items-start gap-2.5 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    class="task-toggle-chk mt-0.5 w-4 h-4 rounded border-slate-400 text-[#1d68b8] focus:ring-[#1d68b8]"
+                    data-id="${escapeAttr(t.id)}"
+                    ${t.done ? "checked" : ""}
+                  />
+                  <div class="text-xs leading-snug">
+                    <div class="text-slate-900 ${t.done ? "font-medium" : ""}">${escapeHtml(t.title)}</div>
+                    <div class="text-[11px] text-slate-500 mt-0.5">${escapeHtml(t.done ? "Выполнено" : t.statusNote)}</div>
+                  </div>
+                </label>
+              `).join("")}
+            </div>
+          </div>
+        </aside>
+      `;
+    }
+
+    // ==================== ЦЕНТРАЛЬНЫЙ ЭКРАН: СОТРУДНИКИ И КАДРЫ (100% по image_4.png) ====================
+    function renderStaffDirectoryCenter() {
+      let filteredStaff = [...state.staff];
+      if (state.deptFilter !== "all") {
+        filteredStaff = filteredStaff.filter((m) => m.department === state.deptFilter);
+      }
+      if (state.staffSearch.trim()) {
+        const q = state.staffSearch.trim().toLowerCase();
+        filteredStaff = filteredStaff.filter((m) =>
+          (m.name || "").toLowerCase().includes(q) ||
+          (m.position || "").toLowerCase().includes(q) ||
+          (m.department || "").toLowerCase().includes(q)
+        );
+      }
+
+      return `
+        <div class="flex-1 min-w-0">
+          <!-- Хлебные крошки Главная > Персонал > Список сотрудников -->
+          <div class="text-xs text-slate-500 mb-2">
+            Главная &gt; Персонал &gt; <span class="text-slate-800 font-medium">Список сотрудников</span>
+          </div>
+
+          <!-- Заголовок + кнопки + Добавить сотрудника и ↓ Скачать табель -->
+          <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div>
+              <h1 class="text-2xl sm:text-[26px] font-semibold text-slate-950 leading-tight">Сотрудники и Кадры</h1>
+              <div class="text-xs text-slate-700 mt-0.5">24 сотрудника в штате</div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button
+                id="open-add-staff-btn"
+                type="button"
+                class="h-9 px-4 rounded-md bg-[#1d68b8] hover:bg-blue-700 text-white text-xs sm:text-sm font-medium inline-flex items-center gap-1.5 shadow-xs transition"
+              >
+                <span class="text-base leading-none">+</span>
+                <span>Добавить сотрудника</span>
+              </button>
+
+              <button
+                id="download-timesheet-btn"
+                type="button"
+                class="h-9 px-4 rounded-md bg-[#e5e7eb] hover:bg-slate-300 text-slate-900 text-xs sm:text-sm font-medium inline-flex items-center gap-1.5 transition"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Скачать табель</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Панель фильтра отделов и Поиск по ФИО -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-4">
+            <div class="sm:col-span-8">
+              <select
+                id="dept-filter-select"
+                class="w-full h-9 px-3 rounded-md border border-slate-300 bg-white text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+              >
+                <option value="all" ${state.deptFilter === "all" ? "selected" : ""}>Все отделы (Торговый зал, Касса, Склад)</option>
+                <option value="Торговый зал" ${state.deptFilter === "Торговый зал" ? "selected" : ""}>Торговый зал</option>
+                <option value="Касса" ${state.deptFilter === "Касса" ? "selected" : ""}>Касса</option>
+                <option value="Склад" ${state.deptFilter === "Склад" ? "selected" : ""}>Склад</option>
+              </select>
+            </div>
+            <div class="sm:col-span-4 relative">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="20" y1="20" x2="16.2" y2="16.2"></line>
+              </svg>
+              <input
+                id="staff-fio-search"
+                type="text"
+                value="${escapeAttr(state.staffSearch)}"
+                placeholder="Поиск по ФИО"
+                class="w-full h-9 pl-8 pr-3 rounded-md border border-slate-300 bg-white text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#1d68b8]"
+              />
+            </div>
+          </div>
+
+          <!-- Таблица сотрудников (точно по image_4.png) -->
+          <div class="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-[#f3f4f6] border-b border-slate-200 text-xs font-medium text-slate-800">
+                  <th class="py-3 px-4">ФИО и Должность</th>
+                  <th class="py-3 px-3">Статус</th>
+                  <th class="py-3 px-3">Отработано<br />часов (Ноябрь)</th>
+                  <th class="py-3 px-3">Продажи<br />за месяц</th>
+                  <th class="py-3 px-3">Выполнение<br />плана</th>
+                  <th class="py-3 px-4 text-center">Действия</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 text-xs sm:text-[13px]">
+                ${filteredStaff.slice(0, 5).map((m) => renderStaffRow(m)).join("")}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStaffRow(m) {
+      let statusBadge = "";
+      if (m.status === "on_shift") {
+        statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#dcfce7] text-[#166534] text-xs font-medium"><span class="w-2 h-2 rounded-full bg-[#16a34a]"></span>На смене</span>`;
+      } else if (m.status === "day_off") {
+        statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#e5e7eb] text-slate-700 text-xs font-medium"><span class="w-2 h-2 rounded-full bg-slate-500"></span>Выходной</span>`;
+      } else {
+        statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#fef9c3] text-[#854d0e] text-xs font-medium"><span class="w-2 h-2 rounded-full bg-[#eab308]"></span>В отпуске</span>`;
+      }
+
+      const isOverPlan = Number(m.planPercent || 0) >= 100;
+      const barWidth = Math.min(100, Number(m.planPercent || 0));
+
+      return `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="py-3.5 px-4">
+            <div class="flex items-center gap-3">
+              <img src="${escapeAttr(m.avatar)}" alt="${escapeAttr(m.name)}" class="w-10 h-10 rounded-full object-cover object-top border border-slate-300 shrink-0" />
+              <div>
+                <div class="font-semibold text-slate-950">${escapeHtml(m.name)}</div>
+                <div class="text-xs text-slate-600">${escapeHtml(m.position)}</div>
+              </div>
+            </div>
+          </td>
+          <td class="py-3.5 px-3 whitespace-nowrap">
+            <button type="button" class="cycle-staff-status-btn" title="Кликните для смены статуса" data-id="${escapeAttr(m.id)}">
+              ${statusBadge}
+            </button>
+          </td>
+          <td class="py-3.5 px-3 font-medium text-slate-900 whitespace-nowrap">
+            ${m.hours} ч
+          </td>
+          <td class="py-3.5 px-3 whitespace-nowrap">
+            ${m.salesKzt > 0 ? `
+              <div class="font-medium text-slate-950">${fmt(m.salesKzt)}</div>
+              ${m.salesRub > 0 ? `<div class="text-[11px] text-slate-400">${m.salesRub.toLocaleString("ru-RU")} ₽</div>` : ""}
+            ` : `<span class="text-slate-500">—</span>`}
+          </td>
+          <td class="py-3.5 px-3 min-w-[130px]">
+            ${m.planPercent > 0 ? `
+              <div class="text-center text-xs font-semibold ${isOverPlan ? "text-[#15803d]" : "text-slate-900"} mb-1">${m.planPercent}%</div>
+              <div class="w-28 mx-auto h-2 rounded-full bg-slate-200 overflow-hidden">
+                <div class="h-full rounded-full ${isOverPlan ? "bg-[#2e7d32]" : "bg-[#1d68b8]"}" style="width: ${barWidth}%;"></div>
+              </div>
+            ` : `<div class="text-center text-slate-500">—</div>`}
+          </td>
+          <td class="py-3.5 px-4">
+            <div class="flex items-center justify-center gap-1.5">
+              <button type="button" class="staff-action-edit w-8 h-7 rounded bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-700" title="Просмотр карточки" data-id="${escapeAttr(m.id)}">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <button type="button" class="staff-action-edit w-8 h-7 rounded bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-700" title="Редактировать" data-id="${escapeAttr(m.id)}">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+              <button type="button" class="staff-action-chat w-8 h-7 rounded bg-slate-100 hover:bg-slate-200 grid place-items-center text-slate-700" title="Написать сообщение" data-id="${escapeAttr(m.id)}">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    // ==================== ДРУГИЕ РАЗДЕЛЫ ЛЕВОГО МЕНЮ (ДАШБОРД, ПРОДАЖИ И СКЛАД, ЗАДАЧИ, НАСТРОЙКИ SUPABASE) ====================
+    function renderDashboardOrSalesCenter() {
+      const totalMonthlySales = state.staff.reduce((s, m) => s + Number(m.salesKzt || 0), 0);
+      const totalStockUnits = state.products.reduce((s, p) => s + Number(p.stock_qty || 0), 0);
+
+      return `
+        <div class="flex-1 min-w-0 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="text-xs text-slate-500">Главная &gt; Управление магазином &gt; ${state.activeNav === "sales" ? "Продажи, Каталог и Склад" : "Операционный Дашборд"}</div>
+              <h1 class="text-2xl font-semibold text-slate-950 mt-0.5">${state.activeNav === "sales" ? "Продажи, Каталог и Складской учет" : "Дашборд магазина «Стиль & Образ»"}</h1>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <button id="dash-open-add-prod-btn" type="button" class="h-9 px-4 rounded-md bg-[#1d68b8] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold">
+                + Добавить новый товар (Supabase Storage)
+              </button>
+              <button id="download-timesheet-btn" type="button" class="h-9 px-4 rounded-md bg-slate-200 hover:bg-slate-300 text-slate-900 text-xs font-medium">
+                ↓ Экспорт Excel
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Карточки -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div class="p-4 rounded-xl bg-[#f3f4f6] border border-slate-200">
+              <div class="text-xs text-slate-600">Выручка за месяц (Ноябрь)</div>
+              <div class="text-xl font-bold text-slate-950 mt-1">${fmt(totalMonthlySales)}</div>
+              <div class="text-[11px] text-emerald-700 font-medium mt-1">+18.4% к прошлому месяцу</div>
+            </div>
+            <div class="p-4 rounded-xl bg-[#f3f4f6] border border-slate-200">
+              <div class="text-xs text-slate-600">Товаров в каталоге / Склад</div>
+              <div class="text-xl font-bold text-slate-950 mt-1">${state.products.length} арт. (${totalStockUnits} шт.)</div>
+              <div class="text-[11px] text-slate-600 mt-1">Бакет Storage: <code>${escapeHtml(state.sbBucket)}</code></div>
+            </div>
+            <div class="p-4 rounded-xl bg-[#f3f4f6] border border-slate-200">
+              <div class="text-xs text-slate-600">Интернет-заказы клиентов</div>
+              <div class="text-xl font-bold text-slate-950 mt-1">${state.orders.length} заказов</div>
+              <div class="text-[11px] text-blue-700 font-medium mt-1">Синхронизация с index.html</div>
+            </div>
+            <div class="p-4 rounded-xl bg-[#f3f4f6] border border-slate-200">
+              <div class="text-xs text-slate-600">Персонал на смене</div>
+              <div class="text-xl font-bold text-slate-950 mt-1">${state.staff.filter((s) => s.status === "on_shift").length} из 24 чел.</div>
+              <div class="text-[11px] text-emerald-700 font-medium mt-1">Смена открыта</div>
+            </div>
+          </div>
+
+          <!-- Таблица товаров каталога и остатков склада -->
+          <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-4 py-3 bg-[#f3f4f6] border-b border-slate-200 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-950">Каталог товаров и складской учет (Фото в Supabase Storage)</h2>
+              <button id="table-add-prod-btn" type="button" class="text-xs font-semibold text-[#1d68b8] hover:underline">+ Добавить товар</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-600 bg-slate-50">
+                    <th class="py-2.5 px-3">Фото</th>
+                    <th class="py-2.5 px-3">Артикул</th>
+                    <th class="py-2.5 px-3">Название и Бренд</th>
+                    <th class="py-2.5 px-3">Размеры</th>
+                    <th class="py-2.5 px-3">Закупка / Продажа</th>
+                    <th class="py-2.5 px-3">Остаток на складе</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                  ${state.products.map((p) => `
+                    <tr class="hover:bg-slate-50">
+                      <td class="py-2.5 px-3">
+                        <img src="${escapeAttr(p.image)}" alt="${escapeAttr(p.name)}" class="w-10 h-12 rounded object-cover object-top border border-slate-200" />
+                      </td>
+                      <td class="py-2.5 px-3 font-mono font-semibold text-slate-900">${escapeHtml(p.sku)}</td>
+                      <td class="py-2.5 px-3">
+                        <div class="font-semibold text-slate-950">${escapeHtml(p.name)}</div>
+                        <div class="text-slate-500">${escapeHtml(p.brand)} • ${escapeHtml(p.warehouse || "Основной склад")}</div>
+                      </td>
+                      <td class="py-2.5 px-3">${Array.isArray(p.sizes) ? p.sizes.join(", ") : "S, M, L, XL"}</td>
+                      <td class="py-2.5 px-3">
+                        <div class="font-bold text-slate-950">${fmt(p.base_price)}</div>
+                        <div class="text-slate-400">Закуп: ${fmt(p.purchase_price || 18000)}</div>
+                      </td>
+                      <td class="py-2.5 px-3">
+                        <div class="inline-flex items-center gap-2">
+                          <button type="button" class="stock-adj-btn w-6 h-6 rounded border border-slate-300 hover:bg-slate-100 font-bold" data-id="${escapeAttr(p.id)}" data-delta="-1">−</button>
+                          <span class="font-semibold text-slate-900">${p.stock_qty ?? 45} шт.</span>
+                          <button type="button" class="stock-adj-btn w-6 h-6 rounded border border-slate-300 hover:bg-slate-100 font-bold" data-id="${escapeAttr(p.id)}" data-delta="5">+5</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Заказы покупателей из интернет-магазина index.html -->
+          <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-4 py-3 bg-[#f3f4f6] border-b border-slate-200 flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-slate-950">Заказы клиентов с витрины магазина (${state.orders.length})</h2>
+              <span class="text-xs text-slate-500">Realtime синхронизация с index.html</span>
+            </div>
+            <div class="divide-y divide-slate-200">
+              ${state.orders.map((o) => `
+                <div class="p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div>
+                    <div class="font-bold text-sm text-slate-950">Заказ #${o.number} • ${escapeHtml(o.customer)} (${escapeHtml(o.phone)})</div>
+                    <div class="text-slate-600 mt-0.5">${escapeHtml(o.city || "Алматы")}, ${escapeHtml(o.address || "")}</div>
+                    <div class="text-slate-500 mt-1">
+                      Товары: ${(o.items || []).map((i) => `${i.name} (${i.size || "M"}) ×${i.qty}`).join(", ")}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="text-right">
+                      <div class="text-sm font-bold text-slate-950">${fmt(o.total)}</div>
+                      <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${STATUS_META[o.status]?.badge || "bg-slate-100"}">
+                        ${STATUS_META[o.status]?.label || o.status}
+                      </span>
+                    </div>
+                    <select class="order-status-select h-8 px-2 rounded border border-slate-300 bg-white text-xs" data-id="${escapeAttr(o.id)}">
+                      ${Object.entries(STATUS_META).map(([k, m]) => `
+                        <option value="${k}" ${o.status === k ? "selected" : ""}>${m.label}</option>
+                      `).join("")}
+                    </select>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSettingsSupabaseCenter() {
+      return `
+        <div class="flex-1 min-w-0 space-y-5">
+          <div>
+            <div class="text-xs text-slate-500">Главная &gt; Настройки &gt; Подключение нового проекта Supabase и Storage</div>
+            <h1 class="text-2xl font-semibold text-slate-950 mt-0.5">🔑 Настройки ключей Supabase &amp; Supabase Storage</h1>
+          </div>
+
+          <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+            <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950 leading-relaxed">
+              <b>Где вставить ключи в коде (чтобы не переделывать заново):</b><br>
+              1. В файле <code>shared-data.js</code> (строки 13–16: <code>window.STYLE_DEFAULT_SB_URL</code> и <code>window.STYLE_DEFAULT_SB_KEY</code>)<br>
+              2. Или в блоке <code>window.SUPABASE_KEYS_OVERRIDE</code> в начале <code>index.html</code> и <code>staff.html</code><br>
+              3. Или прямо в форме ниже — ключи сохранятся, а все изображения товаров будут выгружены в <b>Supabase Storage</b> (бакет <code>product-images</code>).
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1">Supabase Project URL</label>
+                <input id="settings-sb-url" type="text" value="${escapeAttr(state.sbUrl)}" placeholder="https://ваш-новый-проект.supabase.co" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1">Supabase Anon / Publishable Key</label>
+                <input id="settings-sb-key" type="text" value="${escapeAttr(state.sbKey)}" placeholder="eyJhbGciOiJIUzI1NiIs... или sb_publishable_..." class="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1">Бакет Supabase Storage для изображений</label>
+                <input id="settings-sb-bucket" type="text" value="${escapeAttr(state.sbBucket)}" placeholder="product-images" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs font-mono" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-800 mb-1">Edge Function ИИ</label>
+                <input id="settings-sb-aifn" type="text" value="${escapeAttr(state.aiFn)}" placeholder="style-ai" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs font-mono" />
+              </div>
+            </div>
+
+            ${state.sbStatusMsg ? `
+              <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 font-medium">
+                ${escapeHtml(state.sbStatusMsg)}
+              </div>
+            ` : ""}
+
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+              <button id="settings-save-sb-btn" type="button" class="px-5 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold">
+                Сохранить ключи Supabase
+              </button>
+              <button id="settings-upload-all-storage-btn" type="button" ${state.sbSyncing ? "disabled" : ""} class="px-5 py-2.5 rounded-lg bg-[#1d68b8] hover:bg-blue-700 text-white text-xs font-bold">
+                ${state.sbSyncing ? "Выгрузка фото в Supabase Storage..." : "☁️ Выгрузить все изображения каталога в Supabase Storage (product-images)"}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSecondaryTabCenter() {
+      if (state.activeNav === "dashboard" || state.activeNav === "sales") {
+        return renderDashboardOrSalesCenter();
+      }
+      if (state.activeNav === "settings") {
+        return renderSettingsSupabaseCenter();
+      }
+      if (state.activeNav === "tasks") {
+        return `
+          <div class="flex-1 min-w-0 space-y-4">
+            <h1 class="text-2xl font-semibold text-slate-950">Задачи и Планы смены</h1>
+            <form id="add-new-task-form" class="flex flex-wrap gap-2">
+              <input id="new-task-inp" type="text" placeholder="Новая задача для персонала..." required class="flex-1 h-10 px-3 rounded-lg border border-slate-300 text-xs" />
+              <input id="new-task-who" type="text" value="Петрова А." placeholder="Ответственный" class="w-40 h-10 px-3 rounded-lg border border-slate-300 text-xs" />
+              <button type="submit" class="h-10 px-4 rounded-lg bg-[#1d68b8] text-white text-xs font-semibold">+ Добавить задачу</button>
+            </form>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-200">
+              ${state.tasks.map((t) => `
+                <div class="p-3.5 flex items-center justify-between text-xs">
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" class="task-toggle-chk w-4 h-4 rounded text-[#1d68b8]" data-id="${escapeAttr(t.id)}" ${t.done ? "checked" : ""} />
+                    <span class="font-medium text-slate-900">${escapeHtml(t.title)}</span>
+                  </label>
+                  <span class="text-slate-500">${escapeHtml(t.statusNote)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+      // Для schedule, time, docs показываем таблицу сотрудников + профильный блок
+      return renderStaffDirectoryCenter();
+    }
+
+    // ==================== МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ НОВОГО ТОВАРА (100% ПО МАКЕТУ image_5.png) ====================
+    function renderAddProductModal() {
+      if (!state.addProductModalOpen) return "";
+
+      return `
+        <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div class="bg-white rounded-2xl max-w-[880px] w-full p-5 sm:p-7 shadow-2xl border border-slate-300 my-auto">
+            <!-- Шапка модального окна -->
+            <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
+              <h2 class="text-xl sm:text-[22px] font-semibold text-slate-950">Добавление нового товара</h2>
+              <button id="close-add-prod-modal-btn" type="button" class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-slate-700 hover:text-slate-950 font-medium">
+                <span>Закрыть</span>
+                <span class="text-base leading-none">✕</span>
+              </button>
+            </div>
+
+            <form id="add-new-product-form">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- ЛЕВАЯ КОЛОНКА: Фотографии товара (Drag & Drop в Supabase Storage) + Цветовые варианты -->
+                <div class="md:col-span-5 flex flex-col justify-between">
+                  <div>
+                    <div class="text-xs sm:text-sm font-medium text-slate-900 mb-2">Фотографии товара</div>
+
+                    <!-- Зона загрузки главного фото (drag & drop или кликните) -->
+                    <label
+                      id="np-dropzone"
+                      for="np-main-photo-input"
+                      class="relative block w-full h-52 sm:h-56 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#1d68b8] bg-[#f8f9fa] cursor-pointer overflow-hidden transition flex flex-col items-center justify-center text-center p-4"
+                    >
+                      ${state.npMainPreview ? `
+                        <img src="${escapeAttr(state.npMainPreview)}" alt="Предпросмотр фото" class="w-full h-full object-contain" />
+                        <span class="absolute bottom-2 right-2 px-2.5 py-1 rounded bg-slate-900/80 text-white text-[11px] font-medium">Заменить фото</span>
+                      ` : `
+                        <svg class="w-11 h-11 text-slate-400 mb-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                          <polyline points="16 16 12 12 8 16"></polyline>
+                          <line x1="12" y1="12" x2="12" y2="21"></line>
+                        </svg>
+                        <div class="text-xs sm:text-[13px] font-medium text-slate-800 leading-snug">
+                          Загрузить главное фото<br />(drag &amp; drop или кликните)
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-1">не менее 1000x1500 px • сохраняется в Supabase Storage</div>
+                      `}
+                      <input id="np-main-photo-input" type="file" accept="image/*" class="hidden" />
+                    </label>
+
+                    <!-- 4 миниатюры под главным фото (1-я с техническим эскизом парки + 3 слота "+") -->
+                    <div class="grid grid-cols-4 gap-2.5 mt-3">
+                      ${[0, 1, 2, 3].map((slotIdx) => {
+                        const thumbUrl = state.npGalleryPreviews[slotIdx];
+                        return `
+                          <label class="h-16 rounded-lg border ${slotIdx === 0 ? "border-[#1d68b8] bg-white" : "border-dashed border-slate-300 bg-[#f8f9fa]"} hover:border-[#1d68b8] cursor-pointer grid place-items-center overflow-hidden">
+                            ${thumbUrl ? `
+                              <img src="${escapeAttr(thumbUrl)}" alt="Слот ${slotIdx + 1}" class="w-full h-full object-contain p-1" />
+                            ` : `
+                              <span class="text-xl text-slate-400 font-light">+</span>
+                            `}
+                            <input type="file" accept="image/*" class="np-slot-file-inp hidden" data-slot="${slotIdx}" />
+                          </label>
+                        `;
+                      }).join("")}
+                    </div>
+
+                    <!-- Цветовых вариантов -->
+                    <div class="mt-5">
+                      <div class="text-xs sm:text-sm font-medium text-slate-900 mb-2.5">Цветовых вариантов</div>
+                      <div class="flex flex-wrap items-center gap-2.5">
+                        ${state.npColors.map((c, cIdx) => `
+                          <button
+                            type="button"
+                            class="np-color-pick-btn w-7 h-7 rounded-full transition ${
+                              c.selected ? "ring-2 ring-offset-2 ring-slate-900" : "border border-slate-300"
+                            }"
+                            style="background-color: ${c.hex};"
+                            title="${escapeAttr(c.name)}"
+                            data-cidx="${cIdx}"
+                          ></button>
+                        `).join("")}
+
+                        <button
+                          id="np-add-color-btn"
+                          type="button"
+                          class="h-7 px-3 rounded-md bg-[#e5e7eb] hover:bg-slate-300 text-slate-800 text-xs font-medium transition"
+                        >
+                          + Добавить цвет
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ПРАВАЯ КОЛОНКА: Поля товара (Название, Артикул, Категория, Бренд, Описание, Размеры, Цена, Складской учет) -->
+                <div class="md:col-span-7 space-y-3.5">
+                  <!-- Строка 1: Название товара + Артикул + Сгенерировать -->
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div class="sm:col-span-6">
+                      <label class="block text-xs font-medium text-slate-800 mb-1">Название товара</label>
+                      <input
+                        id="np-name-inp"
+                        type="text"
+                        value="${escapeAttr(state.npName)}"
+                        required
+                        class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+                      />
+                    </div>
+                    <div class="sm:col-span-6">
+                      <label class="block text-xs font-medium text-slate-800 mb-1">Артикул</label>
+                      <div class="flex items-center gap-2">
+                        <input
+                          id="np-sku-inp"
+                          type="text"
+                          value="${escapeAttr(state.npSku)}"
+                          required
+                          class="w-28 h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+                        />
+                        <button
+                          id="np-gen-sku-btn"
+                          type="button"
+                          class="flex-1 h-9 px-3 rounded-md bg-[#e5e7eb] hover:bg-slate-300 text-slate-800 text-xs font-medium transition"
+                        >
+                          Сгенерировать
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Строка 2: Категория + Бренд -->
+                  <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div class="sm:col-span-7">
+                      <label class="block text-xs font-medium text-slate-800 mb-1">Категория</label>
+                      <select
+                        id="np-cat-select"
+                        class="w-full h-9 px-3 rounded-md border border-slate-300 bg-white text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+                      >
+                        <option value="men" ${state.npCategorySlug === "men" ? "selected" : ""}>Мужчинам &gt; Верхняя одежда &gt; Парки</option>
+                        <option value="women" ${state.npCategorySlug === "women" ? "selected" : ""}>Женщинам &gt; Верхняя одежда &gt; Пальто и Парки</option>
+                        <option value="kids" ${state.npCategorySlug === "kids" ? "selected" : ""}>Детям &gt; Верхняя одежда &gt; Пуховики</option>
+                        <option value="sport" ${state.npCategorySlug === "sport" ? "selected" : ""}>Спортивный стиль &gt; Костюмы</option>
+                        <option value="shoes" ${state.npCategorySlug === "shoes" ? "selected" : ""}>Обувь &gt; Ботинки и Челси</option>
+                        <option value="sale" ${state.npCategorySlug === "sale" ? "selected" : ""}>Распродажа % &gt; Сезонные скидки</option>
+                      </select>
+                    </div>
+                    <div class="sm:col-span-5">
+                      <label class="block text-xs font-medium text-slate-800 mb-1">Бренд</label>
+                      <select
+                        id="np-brand-select"
+                        class="w-full h-9 px-3 rounded-md border border-slate-300 bg-white text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+                      >
+                        ${BRANDS.map((br) => `
+                          <option value="${escapeAttr(br)}" ${state.npBrand === br ? "selected" : ""}>${escapeHtml(br)}</option>
+                        `).join("")}
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Строка 3: Описание товара -->
+                  <div>
+                    <label class="block text-xs font-medium text-slate-800 mb-1">Описание товара</label>
+                    <textarea
+                      id="np-desc-inp"
+                      rows="2"
+                      class="w-full p-2.5 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900 focus:outline-none focus:border-[#1d68b8]"
+                    >${escapeHtml(state.npDesc)}</textarea>
+                  </div>
+
+                  <!-- Строка 4: Размеры в наличии + Таблица размеров -->
+                  <div>
+                    <label class="block text-xs font-medium text-slate-800 mb-1.5">Размеры в наличии</label>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        ${["S", "M", "L", "XL", "XXL"].map((sz, sIdx) => {
+                          const checked = state.npSizes.includes(sz);
+                          const isPrimaryBlue = sIdx < 2 && checked;
+                          return `
+                            <button
+                              type="button"
+                              class="np-size-toggle-btn h-8 px-2.5 rounded border text-xs font-medium inline-flex items-center gap-1.5 transition ${
+                                isPrimaryBlue
+                                  ? "border-[#1d68b8] bg-white text-slate-900"
+                                  : checked
+                                  ? "border-slate-300 bg-white text-slate-800"
+                                  : "border-slate-200 bg-slate-50 text-slate-400"
+                              }"
+                              data-sz="${sz}"
+                            >
+                              <span class="w-4 h-4 rounded grid place-items-center text-[10px] ${
+                                isPrimaryBlue ? "bg-[#1d68b8] text-white" : checked ? "bg-slate-200 text-slate-700" : "border border-slate-300"
+                              }">${checked ? "✓" : ""}</span>
+                              <span>${sz}</span>
+                            </button>
+                          `;
+                        }).join("")}
+                      </div>
+
+                      <button
+                        id="np-size-table-btn"
+                        type="button"
+                        class="h-8 px-3 rounded-md bg-[#e5e7eb] hover:bg-slate-300 text-slate-800 text-xs font-medium transition"
+                      >
+                        Таблица размеров
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Строка 5: Цена (Цена закупки ₸, Цена продажи ₸, Скидка %) -->
+                  <div>
+                    <div class="text-xs font-semibold text-slate-900 mb-1.5">Цена</div>
+                    <div class="grid grid-cols-3 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Цена закупки (₸)</label>
+                        <input
+                          id="np-purchase-inp"
+                          type="text"
+                          value="${Number(state.npPurchasePrice).toLocaleString("ru-RU")} ₸"
+                          class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Цена продажи (₸)</label>
+                        <input
+                          id="np-retail-inp"
+                          type="text"
+                          value="${Number(state.npRetailPrice).toLocaleString("ru-RU")} ₸"
+                          class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Скидка (%)</label>
+                        <input
+                          id="np-discount-inp"
+                          type="text"
+                          value="${state.npDiscountPercent} %"
+                          class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Строка 6: Складской учет -->
+                  <div>
+                    <div class="text-xs font-semibold text-slate-900 mb-1.5">Складской учет</div>
+                    <div class="grid grid-cols-3 gap-3">
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Количество на складе (шт)</label>
+                        <input
+                          id="np-stock-inp"
+                          type="number"
+                          value="${state.npStockQty}"
+                          class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Минимальный остаток (шт)</label>
+                        <input
+                          id="np-minstock-inp"
+                          type="number"
+                          value="${state.npMinStock}"
+                          class="w-full h-9 px-3 rounded-md border border-slate-300 text-xs sm:text-[13px] text-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-[11px] text-slate-600 mb-1">Выбор склада</label>
+                        <select
+                          id="np-warehouse-sel"
+                          class="w-full h-9 px-2.5 rounded-md border border-slate-300 bg-white text-xs sm:text-[13px] text-slate-900"
+                        >
+                          <option value="Основной склад" ${state.npWarehouse === "Основной склад" ? "selected" : ""}>Основной склад</option>
+                          <option value="Склад ТРЦ Mega" ${state.npWarehouse === "Склад ТРЦ Mega" ? "selected" : ""}>Склад ТРЦ Mega</option>
+                          <option value="Склад Астана" ${state.npWarehouse === "Склад Астана" ? "selected" : ""}>Склад Астана</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Нижняя панель модального окна: Опубликовать на сайте сразу + Отмена + СОХРАНИТЬ И ОПУБЛИКОВАТЬ -->
+              <div class="mt-6 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <label class="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-slate-900">
+                  <input
+                    id="np-publish-chk"
+                    type="checkbox"
+                    class="w-4 h-4 rounded border-slate-300 text-[#1d68b8] focus:ring-[#1d68b8]"
+                    ${state.npPublishNow ? "checked" : ""}
+                  />
+                  <span>Опубликовать на сайте сразу</span>
+                </label>
+
+                <div class="flex items-center gap-3">
+                  <button
+                    id="cancel-add-prod-btn"
+                    type="button"
+                    class="h-10 px-6 rounded-md bg-[#e5e7eb] hover:bg-slate-300 text-slate-800 text-xs sm:text-sm font-medium transition"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    ${state.npUploading ? "disabled" : ""}
+                    class="h-10 px-6 rounded-md bg-[#1d68b8] hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold uppercase tracking-wide shadow-sm transition"
+                  >
+                    ${state.npUploading ? "ЗАГРУЗКА В SUPABASE STORAGE..." : "СОХРАНИТЬ И ОПУБЛИКОВАТЬ"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // Модальное окно добавления нового сотрудника
+    function renderAddStaffModal() {
+      if (!state.addStaffModalOpen) return "";
+      return `
+        <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 class="text-base font-bold text-slate-950">Добавление нового сотрудника</h3>
+              <button id="close-add-staff-modal" type="button" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500 font-bold">✕</button>
+            </div>
+            <form id="new-staff-form" class="mt-4 space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ФИО сотрудника</label>
+                <input id="ns-name" type="text" placeholder="Касымова Гульнара" required class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Должность</label>
+                  <input id="ns-pos" type="text" value="Продавец-консультант" required class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Отдел</label>
+                  <select id="ns-dept" class="w-full h-9 px-2.5 rounded-lg border border-slate-300 bg-white text-xs">
+                    <option value="Торговый зал">Торговый зал</option>
+                    <option value="Касса">Касса</option>
+                    <option value="Склад">Склад</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Отработано часов</label>
+                  <input id="ns-hours" type="number" value="110" class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Продажи за месяц (₸)</label>
+                  <input id="ns-sales" type="number" value="2650000" class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+                </div>
+              </div>
+              <div class="pt-3 flex justify-end gap-2">
+                <button id="cancel-add-staff-btn" type="button" class="px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold">Отмена</button>
+                <button type="submit" class="px-5 py-2 rounded-lg bg-[#1d68b8] text-white text-xs font-bold">Сохранить в штат</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEditStaffModal() {
+      const m = state.editStaffMember;
+      if (!m) return "";
+      return `
+        <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 class="text-base font-bold text-slate-950">${escapeHtml(m.name)}</h3>
+              <button id="close-edit-staff-btn" type="button" class="w-7 h-7 rounded-full hover:bg-slate-100 text-slate-500 font-bold">✕</button>
+            </div>
+            <form id="edit-staff-form" class="mt-4 space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Статус смены</label>
+                <select id="es-status" class="w-full h-9 px-3 rounded-lg border border-slate-300 bg-white text-xs">
+                  <option value="on_shift" ${m.status === "on_shift" ? "selected" : ""}>На смене</option>
+                  <option value="day_off" ${m.status === "day_off" ? "selected" : ""}>Выходной</option>
+                  <option value="vacation" ${m.status === "vacation" ? "selected" : ""}>В отпуске</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Часы (Ноябрь)</label>
+                  <input id="es-hours" type="number" value="${m.hours}" class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Продажи за месяц (₸)</label>
+                  <input id="es-sales" type="number" value="${m.salesKzt}" class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Выполнение плана (%)</label>
+                <input id="es-plan" type="number" value="${m.planPercent}" class="w-full h-9 px-3 rounded-lg border border-slate-300 text-xs" />
+              </div>
+              <div class="pt-3 flex justify-end gap-2">
+                <button type="submit" class="px-5 py-2 rounded-lg bg-[#1d68b8] text-white text-xs font-bold">Сохранить изменения</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    // Модальное окно входа и регистрации сотрудника в портал персонала (с быстрой авторизацией в 1 клик и сохранением в Supabase)
+    function renderStaffAuthModal() {
+      if (!state.staffAuthModalOpen) return "";
+      const quickRoles = [
+        { name: "Мария К.", position: "Директор магазина", dept: "Управление", email: "director@style-obraz.kz", avatar: IMAGES.women_coat },
+        { name: "Иванов Дмитрий", position: "Администратор", dept: "Торговый зал", email: "ivanov@style-obraz.kz", avatar: IMAGES.men_coat },
+        { name: "Сидоров Алексей", position: "Старший продавец", dept: "Торговый зал", email: "sidorov@style-obraz.kz", avatar: IMAGES.men_parka },
+        { name: "Петрова Анна", position: "Кассир-продавец", dept: "Касса", email: "petrova@style-obraz.kz", avatar: IMAGES.women_bomber },
+        { name: "Кузнецова Елена", position: "Кладовщик", dept: "Склад", email: "kuznetsova@style-obraz.kz", avatar: IMAGES.women_parka },
+        { name: "Васильев Игорь", position: "Продавец-консультант", dept: "Торговый зал", email: "vasiliev@style-obraz.kz", avatar: IMAGES.men_leather }
+      ];
+
+      return `
+        <div class="fixed inset-0 z-50 bg-black/55 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative my-8">
+            <button id="close-staff-auth-modal" type="button" class="absolute top-5 right-5 w-9 h-9 rounded-full hover:bg-slate-100 text-slate-500 font-bold">✕</button>
+
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full bg-blue-100 text-[#1d68b8] text-[11px] font-bold">Внутренний портал персонала • Supabase Auth</span>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">Смена: Открыта</span>
+            </div>
+
+            <h2 class="text-2xl font-extrabold text-slate-950 mt-2">
+              ${state.staffAuthTab === "register" ? "Регистрация сотрудника в штат" : "Вход в личный кабинет сотрудника"}
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">
+              Авторизуйтесь по рабочему Email или выберите свою учётную запись ниже для мгновенного входа в портал «Стиль &amp; Образ»
+            </p>
+
+            <!-- Переключатель Вход / Регистрация -->
+            <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-2xl mt-4 text-xs font-bold">
+              <button type="button" data-sttab="login" class="sttab-btn py-2 rounded-xl transition ${state.staffAuthTab === "login" ? "bg-white shadow text-slate-950" : "text-slate-600"}">
+                🔐 Вход сотрудника
+              </button>
+              <button type="button" data-sttab="register" class="sttab-btn py-2 rounded-xl transition ${state.staffAuthTab === "register" ? "bg-white shadow text-slate-950" : "text-slate-600"}">
+                ➕ Регистрация сотрудника
+              </button>
+            </div>
+
+            ${state.staffAuthTab === "login" ? `
+              <form id="staff-login-modal-form" class="mt-4 space-y-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Рабочий Email сотрудника</label>
+                  <input id="st-login-email" type="email" value="${escapeAttr(state.currentStaffUser.email)}" placeholder="director@style-obraz.kz" required class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#1d68b8]" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль</label>
+                  <input id="st-login-pass" type="password" value="123456" placeholder="••••••••" required class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#1d68b8]" />
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-[#1d68b8] hover:bg-blue-700 text-white font-bold text-sm shadow transition">
+                  Войти в портал персонала
+                </button>
+              </form>
+
+              <div class="mt-5 pt-4 border-t border-slate-200">
+                <div class="text-xs font-bold text-slate-700 mb-2.5">Быстрый вход действующим сотрудником в 1 клик:</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  ${quickRoles.map((qr, idx) => `
+                    <button
+                      type="button"
+                      class="quick-staff-pick-btn p-2.5 rounded-xl border border-slate-200 hover:border-[#1d68b8] hover:bg-blue-50/40 text-left transition flex items-center justify-between gap-2"
+                      data-qidx="${idx}"
+                    >
+                      <div class="flex items-center gap-2.5 min-w-0">
+                        <img src="${escapeAttr(qr.avatar)}" alt="${escapeAttr(qr.name)}" class="w-8 h-8 rounded-full object-cover object-top border border-slate-300 shrink-0" />
+                        <div class="min-w-0">
+                          <div class="font-bold text-xs text-slate-950 truncate">${escapeHtml(qr.name)}</div>
+                          <div class="text-[11px] text-[#1d68b8] font-medium truncate">${escapeHtml(qr.position)}</div>
+                        </div>
+                      </div>
+                      <span class="px-2 py-0.5 rounded bg-blue-100 text-[#1d68b8] text-[10px] font-bold shrink-0">Войти →</span>
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+            ` : `
+              <form id="staff-register-modal-form" class="mt-4 space-y-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">ФИО нового сотрудника</label>
+                  <input id="st-reg-name" type="text" placeholder="Оспанов Тимур" required class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#1d68b8]" />
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Рабочий Email</label>
+                    <input id="st-reg-email" type="email" placeholder="timur@style-obraz.kz" required class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#1d68b8]" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль</label>
+                    <input id="st-reg-pass" type="password" value="123456" required class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:border-[#1d68b8]" />
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Должность</label>
+                    <select id="st-reg-pos" class="w-full h-10 px-3 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm">
+                      <option value="Продавец-консультант">Продавец-консультант</option>
+                      <option value="Старший продавец">Старший продавец</option>
+                      <option value="Кассир-продавец">Кассир-продавец</option>
+                      <option value="Администратор">Администратор</option>
+                      <option value="Кладовщик">Кладовщик</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Отдел</label>
+                    <select id="st-reg-dept" class="w-full h-10 px-3 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm">
+                      <option value="Торговый зал">Торговый зал</option>
+                      <option value="Касса">Касса</option>
+                      <option value="Склад">Склад</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-[#1d68b8] hover:bg-blue-700 text-white font-bold text-sm shadow transition">
+                  Зарегистрировать в Supabase и войти
+                </button>
+              </form>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderToast() {
+      if (!state.toast) return "";
+      return `
+        <div class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-slate-950 text-white px-5 py-3 rounded-xl shadow-2xl text-xs sm:text-sm font-semibold border border-slate-700">
+          ${escapeHtml(state.toast)}
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/"/g, "&quot;");
+    }
+
+    // ==================== ГЛАВНЫЙ РЕНДЕР ПОРТАЛА ПЕРСОНАЛА ====================
+    function render() {
+      const root = document.getElementById("app");
+      const centerContent = state.activeNav === "staff"
+        ? renderStaffDirectoryCenter()
+        : renderSecondaryTabCenter();
+
+      root.innerHTML = `
+        ${renderTopHeader()}
+        <div class="max-w-[1360px] mx-auto flex flex-col lg:flex-row min-h-[calc(100vh-120px)]">
+          ${renderLeftSidebar()}
+          <main class="flex-1 p-4 sm:p-6 flex flex-col xl:flex-row gap-6 items-start">
+            ${centerContent}
+            ${renderRightWidgets()}
+          </main>
+        </div>
+        ${renderAddProductModal()}
+        ${renderAddStaffModal()}
+        ${renderEditStaffModal()}
+        ${renderStaffAuthModal()}
+        ${renderToast()}
+      `;
+
+      bindEvents();
+    }
+
+    // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
+    function bindEvents() {
+      // Переключение левого меню
+      document.querySelectorAll(".nav-side-btn").forEach((btn) => {
+        btn.onclick = () => {
+          state.activeNav = btn.dataset.nav;
+          render();
+        };
+      });
+
+      // Верхние ссылки категорий -> открывают раздел Продажи/Каталог или модальное окно добавления товара
+      document.querySelectorAll(".staff-cat-link").forEach((btn) => {
+        btn.onclick = () => {
+          state.activeNav = "sales";
+          render();
+        };
+      });
+
+      // Открытие модального окна «Добавление нового товара» (image_5.png)
+      ["top-open-add-prod-btn", "sidebar-add-product-btn", "dash-open-add-prod-btn", "table-add-prod-btn"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.onclick = () => {
+            state.addProductModalOpen = true;
+            render();
+          };
+        }
+      });
+
+      const closeAddProdBtn = document.getElementById("close-add-prod-modal-btn");
+      const cancelAddProdBtn = document.getElementById("cancel-add-prod-btn");
+      [closeAddProdBtn, cancelAddProdBtn].forEach((b) => {
+        if (b) b.onclick = () => { state.addProductModalOpen = false; render(); };
+      });
+
+      // Открытие окна входа / смены сотрудника
+      ["top-open-staff-auth-btn", "header-profile-auth-btn"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.onclick = () => {
+            state.staffAuthModalOpen = true;
+            render();
+          };
+        }
+      });
+      const closeStaffAuthBtn = document.getElementById("close-staff-auth-modal");
+      if (closeStaffAuthBtn) closeStaffAuthBtn.onclick = () => { state.staffAuthModalOpen = false; render(); };
+
+      document.querySelectorAll(".sttab-btn").forEach((btn) => {
+        btn.onclick = () => {
+          state.staffAuthTab = btn.dataset.sttab;
+          render();
+        };
+      });
+
+      const quickRoles = [
+        { name: "Мария К.", position: "Директор магазина", email: "director@style-obraz.kz", avatar: IMAGES.women_coat },
+        { name: "Иванов Дмитрий", position: "Администратор", email: "ivanov@style-obraz.kz", avatar: IMAGES.men_coat },
+        { name: "Сидоров Алексей", position: "Старший продавец", email: "sidorov@style-obraz.kz", avatar: IMAGES.men_parka },
+        { name: "Петрова Анна", position: "Кассир-продавец", email: "petrova@style-obraz.kz", avatar: IMAGES.women_bomber },
+        { name: "Кузнецова Елена", position: "Кладовщик", email: "kuznetsova@style-obraz.kz", avatar: IMAGES.women_parka },
+        { name: "Васильев Игорь", position: "Продавец-консультант", email: "vasiliev@style-obraz.kz", avatar: IMAGES.men_leather }
+      ];
+      document.querySelectorAll(".quick-staff-pick-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const picked = quickRoles[Number(btn.dataset.qidx) || 0];
+          if (picked) {
+            state.currentStaffUser = picked;
+            state.staffAuthModalOpen = false;
+            notify(`Вы вошли как: ${picked.name} (${picked.position})`);
+          }
+        };
+      });
+
+      const staffLoginModalForm = document.getElementById("staff-login-modal-form");
+      if (staffLoginModalForm) {
+        staffLoginModalForm.onsubmit = (e) => {
+          e.preventDefault();
+          const email = document.getElementById("st-login-email").value.trim();
+          const found = state.staff.find((s) => (s.email || "").toLowerCase() === email.toLowerCase());
+          state.currentStaffUser = {
+            name: found ? found.name : "Мария К.",
+            position: found ? found.position : "Директор магазина",
+            email,
+            avatar: found ? found.avatar : IMAGES.women_coat
+          };
+          state.staffAuthModalOpen = false;
+          notify(`Авторизация успешна: ${state.currentStaffUser.name} (${state.currentStaffUser.position})`);
+        };
+      }
+
+      const staffRegModalForm = document.getElementById("staff-register-modal-form");
+      if (staffRegModalForm) {
+        staffRegModalForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("st-reg-name").value.trim();
+          const email = document.getElementById("st-reg-email").value.trim();
+          const position = document.getElementById("st-reg-pos").value;
+          const department = document.getElementById("st-reg-dept").value;
+
+          const newEmp = {
+            id: `st-${Date.now()}`,
+            name,
+            shortName: name.split(" ")[0] + " " + (name.split(" ")[1]?.[0] || "") + ".",
+            position,
+            department,
+            status: "on_shift",
+            hours: 120,
+            salesKzt: 2500000,
+            salesRub: 0,
+            planTarget: 2800000,
+            planPercent: 89,
+            hourlyRate: 2200,
+            email,
+            avatar: IMAGES.men_coat
+          };
+
+          state.staff.unshift(newEmp);
+          state.currentStaffUser = { name, position, email, avatar: newEmp.avatar };
+          state.staffAuthModalOpen = false;
+          persistLocal();
+
+          const sb = getSbClient();
+          if (sb) {
+            try {
+              await sb.from("staff_members").insert({
+                id: newEmp.id,
+                full_name: newEmp.name,
+                position: newEmp.position,
+                department: newEmp.department,
+                status: "on_shift",
+                hours_worked: 120,
+                monthly_sales: 2500000,
+                plan_percent: 89,
+                email
+              });
+            } catch (_) {}
+          }
+          notify(`Сотрудник «${name}» зарегистрирован в Supabase и авторизован!`);
+        };
+      }
+
+      // Открытие настроек ключей Supabase
+      const topSbBtn = document.getElementById("top-open-sb-settings-btn");
+      if (topSbBtn) {
+        topSbBtn.onclick = () => {
+          state.activeNav = "settings";
+          render();
+        };
+      }
+
+      // Переключение статуса смены
+      const shiftBtn = document.getElementById("toggle-shift-top-btn");
+      if (shiftBtn) {
+        shiftBtn.onclick = () => {
+          state.shiftOpen = !state.shiftOpen;
+          notify(state.shiftOpen ? "Смена магазина открыта" : "Смена магазина закрыта");
+        };
+      }
+
+      // Фильтр отделов и поиск по ФИО
+      const deptSel = document.getElementById("dept-filter-select");
+      if (deptSel) {
+        deptSel.onchange = (e) => {
+          state.deptFilter = e.target.value;
+          render();
+        };
+      }
+
+      ["staff-fio-search", "staff-global-search"].forEach((id) => {
+        const inp = document.getElementById(id);
+        if (inp) {
+          inp.oninput = (e) => {
+            state.staffSearch = e.target.value;
+            render();
+            const el = document.getElementById(id);
+            if (el) {
+              el.focus();
+              el.setSelectionRange(el.value.length, el.value.length);
+            }
+          };
+        }
+      });
+
+      // Скачать табель (Excel)
+      const dlBtn = document.getElementById("download-timesheet-btn");
+      if (dlBtn) dlBtn.onclick = () => downloadTimesheetExcel();
+
+      // Добавление сотрудника
+      const openAddStaff = document.getElementById("open-add-staff-btn");
+      if (openAddStaff) openAddStaff.onclick = () => { state.addStaffModalOpen = true; render(); };
+      const closeAddStaff = document.getElementById("close-add-staff-modal");
+      const cancelAddStaff = document.getElementById("cancel-add-staff-btn");
+      [closeAddStaff, cancelAddStaff].forEach((b) => {
+        if (b) b.onclick = () => { state.addStaffModalOpen = false; render(); };
+      });
+
+      const newStaffForm = document.getElementById("new-staff-form");
+      if (newStaffForm) {
+        newStaffForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("ns-name").value.trim();
+          const position = document.getElementById("ns-pos").value.trim();
+          const department = document.getElementById("ns-dept").value;
+          const hours = Number(document.getElementById("ns-hours").value) || 110;
+          const salesKzt = Number(document.getElementById("ns-sales").value) || 0;
+          const planPercent = salesKzt > 0 ? Math.round((salesKzt / 3000000) * 100) : 0;
+
+          const newEmp = {
+            id: `st-${Date.now()}`,
+            name,
+            shortName: name.split(" ")[0] + " " + (name.split(" ")[1]?.[0] || "") + ".",
+            position,
+            department,
+            status: "on_shift",
+            hours,
+            salesKzt,
+            salesRub: 0,
+            planTarget: 3000000,
+            planPercent,
+            hourlyRate: 2200,
+            avatar: IMAGES.women_bomber || "assets/images/women_bomber.jpg"
+          };
+
+          state.staff.unshift(newEmp);
+          state.addStaffModalOpen = false;
+          persistLocal();
+
+          const sb = getSbClient();
+          if (sb) {
+            try {
+              await sb.from("staff_members").insert({
+                id: newEmp.id,
+                full_name: newEmp.name,
+                position: newEmp.position,
+                department: newEmp.department,
+                status: newEmp.status,
+                hours_worked: newEmp.hours,
+                monthly_sales: newEmp.salesKzt,
+                plan_percent: newEmp.planPercent
+              });
+            } catch (_) {}
+          }
+          notify(`Сотрудник «${name}» добавлен в штат!`);
+        };
+      }
+
+      // Смена статуса сотрудника по клику на бейдж
+      document.querySelectorAll(".cycle-staff-status-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          const m = state.staff.find((x) => x.id === btn.dataset.id);
+          if (!m) return;
+          const order = ["on_shift", "day_off", "vacation"];
+          m.status = order[(order.indexOf(m.status) + 1) % order.length];
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try { await sb.from("staff_members").update({ status: m.status }).eq("id", m.id); } catch (_) {}
+          }
+          render();
+        };
+      });
+
+      // Редактирование сотрудника
+      document.querySelectorAll(".staff-action-edit").forEach((btn) => {
+        btn.onclick = () => {
+          state.editStaffMember = state.staff.find((x) => x.id === btn.dataset.id) || null;
+          render();
+        };
+      });
+      const closeEditStaff = document.getElementById("close-edit-staff-btn");
+      if (closeEditStaff) closeEditStaff.onclick = () => { state.editStaffMember = null; render(); };
+
+      const editStaffForm = document.getElementById("edit-staff-form");
+      if (editStaffForm && state.editStaffMember) {
+        editStaffForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const m = state.editStaffMember;
+          m.status = document.getElementById("es-status").value;
+          m.hours = Number(document.getElementById("es-hours").value) || 0;
+          m.salesKzt = Number(document.getElementById("es-sales").value) || 0;
+          m.planPercent = Number(document.getElementById("es-plan").value) || 0;
+          state.editStaffMember = null;
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try {
+              await sb.from("staff_members").update({
+                status: m.status,
+                hours_worked: m.hours,
+                monthly_sales: m.salesKzt,
+                plan_percent: m.planPercent
+              }).eq("id", m.id);
+            } catch (_) {}
+          }
+          notify(`Данные сотрудника «${m.name}» обновлены!`);
+        };
+      }
+
+      document.querySelectorAll(".staff-action-chat").forEach((btn) => {
+        btn.onclick = () => {
+          const m = state.staff.find((x) => x.id === btn.dataset.id);
+          if (m) notify(`Отправлено внутреннее уведомление сотруднику: ${m.name}`);
+        };
+      });
+
+      // Чек-лист «Задачи на день»
+      document.querySelectorAll(".task-toggle-chk").forEach((chk) => {
+        chk.onchange = async () => {
+          const t = state.tasks.find((x) => x.id === chk.dataset.id);
+          if (!t) return;
+          t.done = chk.checked;
+          t.statusNote = t.done ? "Выполнено" : "В процессе";
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try {
+              await sb.from("staff_tasks").update({ is_done: t.done, status_note: t.statusNote }).eq("id", t.id);
+            } catch (_) {}
+          }
+          render();
+        };
+      });
+
+      const addNewTaskForm = document.getElementById("add-new-task-form");
+      if (addNewTaskForm) {
+        addNewTaskForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const title = document.getElementById("new-task-inp").value.trim();
+          const who = document.getElementById("new-task-who").value.trim() || "Петрова А.";
+          const newTask = {
+            id: `task-${Date.now()}`,
+            title,
+            statusNote: `Назначено ${who}`,
+            assignee: who,
+            done: false
+          };
+          state.tasks.push(newTask);
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try {
+              await sb.from("staff_tasks").insert({
+                id: newTask.id,
+                title: newTask.title,
+                status_note: newTask.statusNote,
+                assignee: newTask.assignee,
+                is_done: false
+              });
+            } catch (_) {}
+          }
+          notify("Задача добавлена в чек-лист смены!");
+        };
+      }
+
+      // ==================== СОБЫТИЯ МОДАЛЬНОГО ОКНА «ДОБАВЛЕНИЕ НОВОГО ТОВАРА» (image_5.png) ====================
+      const mainPhotoInp = document.getElementById("np-main-photo-input");
+      if (mainPhotoInp) {
+        mainPhotoInp.onchange = async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          syncModalFieldsFromDom();
+          state.npMainFile = file;
+          state.npMainPreview = await window.fileToDataUrl(file);
+          state.npGalleryPreviews[0] = state.npMainPreview;
+          render();
+        };
+      }
+
+      const dropzone = document.getElementById("np-dropzone");
+      if (dropzone) {
+        dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add("border-[#1d68b8]"); };
+        dropzone.ondragleave = () => dropzone.classList.remove("border-[#1d68b8]");
+        dropzone.ondrop = async (e) => {
+          e.preventDefault();
+          dropzone.classList.remove("border-[#1d68b8]");
+          const file = e.dataTransfer?.files?.[0];
+          if (!file) return;
+          syncModalFieldsFromDom();
+          state.npMainFile = file;
+          state.npMainPreview = await window.fileToDataUrl(file);
+          state.npGalleryPreviews[0] = state.npMainPreview;
+          render();
+        };
+      }
+
+      document.querySelectorAll(".np-slot-file-inp").forEach((inp) => {
+        inp.onchange = async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          syncModalFieldsFromDom();
+          const slot = Number(inp.dataset.slot) || 0;
+          const dUrl = await window.fileToDataUrl(file);
+          state.npGalleryPreviews[slot] = dUrl;
+          if (slot === 0 && !state.npMainPreview) {
+            state.npMainFile = file;
+            state.npMainPreview = dUrl;
+          }
+          render();
+        };
+      });
+
+      const genSkuBtn = document.getElementById("np-gen-sku-btn");
+      if (genSkuBtn) {
+        genSkuBtn.onclick = () => {
+          syncModalFieldsFromDom();
+          const prefixes = ["WO", "PK", "LE", "BO", "AV"];
+          const pref = prefixes[Math.floor(Math.random() * prefixes.length)];
+          state.npSku = `${pref}-${Math.floor(1000 + Math.random() * 8999)}`;
+          render();
+        };
+      }
+
+      document.querySelectorAll(".np-size-toggle-btn").forEach((btn) => {
+        btn.onclick = () => {
+          syncModalFieldsFromDom();
+          const sz = btn.dataset.sz;
+          if (state.npSizes.includes(sz)) {
+            if (state.npSizes.length > 1) state.npSizes = state.npSizes.filter((x) => x !== sz);
+          } else {
+            state.npSizes.push(sz);
+          }
+          render();
+        };
+      });
+
+      document.querySelectorAll(".np-color-pick-btn").forEach((btn) => {
+        btn.onclick = () => {
+          syncModalFieldsFromDom();
+          const idx = Number(btn.dataset.cidx);
+          if (state.npColors[idx]) {
+            state.npColors[idx].selected = !state.npColors[idx].selected;
+          }
+          render();
+        };
+      });
+
+      const addColorBtn = document.getElementById("np-add-color-btn");
+      if (addColorBtn) {
+        addColorBtn.onclick = () => {
+          syncModalFieldsFromDom();
+          const extraColors = [
+            { name: "Светло-бежевый", hex: "#e1d6c6", selected: true },
+            { name: "Оливковый", hex: "#3f4f3c", selected: true },
+            { name: "Шоколадный", hex: "#4f3d37", selected: true }
+          ];
+          const next = extraColors[state.npColors.length % extraColors.length];
+          state.npColors.push(next);
+          render();
+        };
+      }
+
+      const sizeTableBtn = document.getElementById("np-size-table-btn");
+      if (sizeTableBtn) {
+        sizeTableBtn.onclick = () => {
+          notify("Таблица размеров ГОСТ/EU: S (46), M (48), L (50), XL (52), XXL (54–56)");
+        };
+      }
+
+      // СОХРАНИТЬ И ОПУБЛИКОВАТЬ (с загрузкой изображения в Supabase Storage product-images!)
+      const addProdForm = document.getElementById("add-new-product-form");
+      if (addProdForm) {
+        addProdForm.onsubmit = async (e) => {
+          e.preventDefault();
+          syncModalFieldsFromDom();
+
+          state.npUploading = true;
+          render();
+
+          const sb = getSbClient();
+          const rawImageSource = state.npMainFile || state.npMainPreview || IMAGES.men_parka;
+
+          // Загружаем изображение в Supabase Storage (бакет product-images)
+          const uploadRes = await window.uploadImageToSupabaseStorage(
+            sb,
+            rawImageSource,
+            state.npSku || state.npName,
+            state.sbBucket
+          );
+
+          const finalImageUrl = uploadRes.url || IMAGES.men_parka;
+          const discountPct = Number(String(state.npDiscountPercent).replace(/[^0-9]/g, "")) || 0;
+          const retailPrice = Number(String(state.npRetailPrice).replace(/[^0-9]/g, "")) || 55000;
+          const purchasePrice = Number(String(state.npPurchasePrice).replace(/[^0-9]/g, "")) || 18000;
+          const oldPrice = discountPct > 0 ? Math.round(retailPrice / (1 - discountPct / 100)) : null;
+
+          const activeColors = state.npColors.filter((c) => c.selected);
+          const newProduct = {
+            id: `prod-${Date.now()}`,
+            sku: state.npSku || "WO-4509",
+            category_slug: state.npCategorySlug || "men",
+            subcategory: "Верхняя одежда",
+            brand: state.npBrand || "Nordic Shield",
+            name: state.npName || 'Куртка зимняя парка "Nordic"',
+            description: state.npDesc || "",
+            purchase_price: purchasePrice,
+            base_price: retailPrice,
+            old_price: oldPrice,
+            discount_percent: discountPct,
+            badge: discountPct > 0 ? `SALE -${discountPct}%` : "NEW",
+            sizes: state.npSizes.length ? [...state.npSizes] : ["S", "M", "L", "XL", "XXL"],
+            colors: activeColors.length ? activeColors : [{ name: "Графитовый", hex: "#2d2f31" }],
+            season: "Осень-Зима '26",
+            image: finalImageUrl,
+            gallery: [finalImageUrl, ...state.npGalleryPreviews.filter(Boolean)],
+            stock_qty: Number(state.npStockQty) || 45,
+            min_stock: Number(state.npMinStock) || 5,
+            warehouse: state.npWarehouse || "Основной склад",
+            is_available: true,
+            is_published: Boolean(state.npPublishNow),
+            is_new: true,
+            is_sale: discountPct > 0,
+            popularity: 100
+          };
+
+          state.products.unshift(newProduct);
+          state.npUploading = false;
+          state.addProductModalOpen = false;
+          state.lastStorageUrl = finalImageUrl;
+          persistLocal();
+
+          if (sb) {
+            try {
+              await sb.from("products").upsert({
+                id: newProduct.id,
+                sku: newProduct.sku,
+                category_slug: newProduct.category_slug,
+                subcategory: newProduct.subcategory,
+                brand: newProduct.brand,
+                name: newProduct.name,
+                description: newProduct.description,
+                purchase_price: newProduct.purchase_price,
+                base_price: newProduct.base_price,
+                old_price: newProduct.old_price,
+                discount_percent: newProduct.discount_percent,
+                badge: newProduct.badge,
+                sizes: newProduct.sizes,
+                colors: newProduct.colors,
+                season: newProduct.season,
+                image_url: finalImageUrl,
+                gallery_urls: newProduct.gallery,
+                stock_qty: newProduct.stock_qty,
+                min_stock: newProduct.min_stock,
+                warehouse: newProduct.warehouse,
+                is_available: true,
+                is_published: newProduct.is_published,
+                is_new: true,
+                is_sale: newProduct.is_sale
+              });
+            } catch (_) {}
+          }
+
+          notify(
+            uploadRes.storageUsed
+              ? `Товар «${newProduct.name}» (${newProduct.sku}) опубликован! Фото сохранено в Supabase Storage (${uploadRes.bucket}).`
+              : `Товар «${newProduct.name}» (${newProduct.sku}) сохранён и опубликован на клиентской витрине!`
+          );
+        };
+      }
+
+      // Управление остатками на складе и статусами заказов
+      document.querySelectorAll(".stock-adj-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          const p = state.products.find((x) => x.id === btn.dataset.id);
+          if (!p) return;
+          const delta = Number(btn.dataset.delta) || 0;
+          p.stock_qty = Math.max(0, Number(p.stock_qty || 0) + delta);
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try { await sb.from("products").update({ stock_qty: p.stock_qty }).eq("id", p.id); } catch (_) {}
+          }
+          notify(`Остаток ${p.sku} «${p.name}»: ${p.stock_qty} шт.`);
+        };
+      });
+
+      document.querySelectorAll(".order-status-select").forEach((sel) => {
+        sel.onchange = async (e) => {
+          const ord = state.orders.find((x) => x.id === sel.dataset.id);
+          if (!ord) return;
+          ord.status = e.target.value;
+          persistLocal();
+          const sb = getSbClient();
+          if (sb) {
+            try { await sb.from("orders").update({ status: ord.status }).eq("id", ord.id); } catch (_) {}
+          }
+          notify(`Статус заказа #${ord.number} обновлён: ${STATUS_META[ord.status]?.label}`);
+        };
+      });
+
+      // Сохранение ключей Supabase и выгрузка всех изображений в Supabase Storage
+      const saveSbBtn = document.getElementById("settings-save-sb-btn");
+      if (saveSbBtn) {
+        saveSbBtn.onclick = async () => {
+          state.sbUrl = document.getElementById("settings-sb-url").value.trim();
+          state.sbKey = document.getElementById("settings-sb-key").value.trim();
+          state.sbBucket = document.getElementById("settings-sb-bucket").value.trim() || "product-images";
+          state.aiFn = document.getElementById("settings-sb-aifn").value.trim() || "style-ai";
+          sbClient = null;
+          window.saveStyleConfig(state.sbUrl, state.sbKey, state.sbBucket, state.aiFn);
+          await syncFromSupabase();
+          state.sbStatusMsg = "Ключи Supabase сохранены!";
+          notify("Настройки Supabase сохранены!");
+        };
+      }
+
+      const uploadAllStorageBtn = document.getElementById("settings-upload-all-storage-btn");
+      if (uploadAllStorageBtn) {
+        uploadAllStorageBtn.onclick = async () => {
+          state.sbUrl = document.getElementById("settings-sb-url").value.trim();
+          state.sbKey = document.getElementById("settings-sb-key").value.trim();
+          state.sbBucket = document.getElementById("settings-sb-bucket").value.trim() || "product-images";
+          state.aiFn = document.getElementById("settings-sb-aifn").value.trim() || "style-ai";
+          sbClient = null;
+          window.saveStyleConfig(state.sbUrl, state.sbKey, state.sbBucket, state.aiFn);
+
+          const sb = getSbClient();
+          if (!sb) {
+            state.sbStatusMsg = "Пожалуйста, вставьте ваш Supabase Project URL и Anon Key.";
+            render();
+            return;
+          }
+
+          state.sbSyncing = true;
+          state.sbStatusMsg = "Начинаем загрузку фотографий всех товаров в Supabase Storage...";
+          render();
+
+          try {
+            const res = await window.syncAllCatalogAndImagesToSupabase(
+              sb,
+              state.products,
+              state.sbBucket,
+              (msg) => {
+                state.sbStatusMsg = msg;
+                render();
+              }
+            );
+            state.products = res.updatedProducts;
+            state.sbConnected = true;
+            state.sbSyncing = false;
+            state.sbStatusMsg = `Успешно! Выгружено изображений в Supabase Storage (${state.sbBucket}): ${res.uploadedCount} шт., таблица products обновлена.`;
+            persistLocal();
+            render();
+          } catch (err) {
+            state.sbSyncing = false;
+            state.sbStatusMsg = `Ошибка: ${err.message || String(err)}`;
+            render();
+          }
+        };
+      }
+    }
+
+    function syncModalFieldsFromDom() {
+      const nameEl = document.getElementById("np-name-inp");
+      if (nameEl) state.npName = nameEl.value;
+      const skuEl = document.getElementById("np-sku-inp");
+      if (skuEl) state.npSku = skuEl.value;
+      const catEl = document.getElementById("np-cat-select");
+      if (catEl) state.npCategorySlug = catEl.value;
+      const brEl = document.getElementById("np-brand-select");
+      if (brEl) state.npBrand = brEl.value;
+      const descEl = document.getElementById("np-desc-inp");
+      if (descEl) state.npDesc = descEl.value;
+      const purEl = document.getElementById("np-purchase-inp");
+      if (purEl) state.npPurchasePrice = Number(String(purEl.value).replace(/[^0-9]/g, "")) || 18000;
+      const retEl = document.getElementById("np-retail-inp");
+      if (retEl) state.npRetailPrice = Number(String(retEl.value).replace(/[^0-9]/g, "")) || 55000;
+      const discEl = document.getElementById("np-discount-inp");
+      if (discEl) state.npDiscountPercent = Number(String(discEl.value).replace(/[^0-9]/g, "")) || 0;
+      const stEl = document.getElementById("np-stock-inp");
+      if (stEl) state.npStockQty = Number(stEl.value) || 45;
+      const minEl = document.getElementById("np-minstock-inp");
+      if (minEl) state.npMinStock = Number(minEl.value) || 5;
+      const whEl = document.getElementById("np-warehouse-sel");
+      if (whEl) state.npWarehouse = whEl.value;
+      const pubEl = document.getElementById("np-publish-chk");
+      if (pubEl) state.npPublishNow = pubEl.checked;
+    }
+
+    // ==================== ИИ-АНАЛИТИК ПЕРСОНАЛА ====================
+    function formatAiText(text) {
+      return escapeHtml(text)
+        .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/\*(.+?)\*/g, "<i>$1</i>")
+        .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-blue-100 text-blue-900 font-mono text-[11px] font-bold">$1</code>')
+        .replace(/\n/g, "<br>");
+    }
+
+    function appendAiMessage(role, html) {
+      const box = document.getElementById("aiMessages");
+      const div = document.createElement("div");
+      div.className = `ai-msg ${role === "user" ? "ai-msg-user" : "ai-msg-bot"}`;
+      div.innerHTML = html;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    async function askStaffAi(text) {
+      const clean = (text || "").trim();
+      if (!clean) return;
+      appendAiMessage("user", escapeHtml(clean));
+      aiHistory.push({ role: "user", parts: [{ text: clean }] });
+
+      const loading = appendAiMessage("bot", "Анализирую показатели персонала и склада...");
+      const btn = document.getElementById("aiSendBtn");
+      const inp = document.getElementById("aiInput");
+      btn.disabled = true;
+      inp.disabled = true;
+
+      try {
+        const res = await window.callStyleAi({
+          sbUrl: state.sbUrl,
+          sbKey: state.sbKey,
+          aiFn: state.aiFn,
+          systemPrompt: `Ты "Стиль AI • ERP" — аналитик портала персонала магазина одежды "Стиль & Образ". Все суммы в тенге (₸).`,
+          history: aiHistory,
+          userText: clean,
+          dbSnapshot: {
+            isStaff: true,
+            products: state.products,
+            staff: state.staff,
+            orders: state.orders
+          }
+        });
+        aiHistory.push({ role: "model", parts: [{ text: res.reply }] });
+        loading.innerHTML = formatAiText(res.reply);
+      } catch (err) {
+        loading.innerHTML = `Ошибка: ${escapeHtml(err.message || String(err))}`;
+      } finally {
+        btn.disabled = false;
+        inp.disabled = false;
+        inp.focus();
+      }
+    }
+
+    function setupAiWidget() {
+      const fab = document.getElementById("aiFab");
+      const panel = document.getElementById("aiPanel");
+      const close = document.getElementById("aiClose");
+      const clear = document.getElementById("aiClear");
+      const form = document.getElementById("aiForm");
+      const inp = document.getElementById("aiInput");
+
+      fab.onclick = () => {
+        panel.classList.toggle("hidden");
+        if (!panel.classList.contains("hidden")) inp.focus();
+      };
+      close.onclick = () => panel.classList.add("hidden");
+      clear.onclick = () => {
+        aiHistory = [];
+        document.getElementById("aiMessages").innerHTML = `<div class="ai-msg ai-msg-bot">Чат очищен. Задайте вопрос по продажам сотрудников, складу или Supabase Storage!</div>`;
+      };
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const v = inp.value;
+        inp.value = "";
+        await askStaffAi(v);
+      };
+      document.querySelectorAll(".ai-quick").forEach((b) => {
+        b.onclick = () => askStaffAi(b.dataset.prompt);
+      });
+    }
+
+    render();
+    setupAiWidget();
+    syncFromSupabase();
+  </script>
+</body>
+</html>
